@@ -1,7 +1,10 @@
 import telebot
 import time
+import random
+import os
+import requests
 from config import TOKEN
-from logic import gen_pass, gen_emodji, flip_coin,get_random_fact,count_down
+from logic import gen_pass, gen_emodji, flip_coin,get_random_fact,count_down,get_help_text,get_random_number
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -60,8 +63,45 @@ def do_countdown(message):
     number = int(parts[1])
     bot.send_message(message.chat.id, count_down(number))
 
+@bot.message_handler(commands=['help'])
+def send_help(message):
+    help_text = get_help_text()
+    bot.send_message(message.chat.id, help_text)
+
+@bot.message_handler(commands=['mem'])
+def send_mem(message):
+    img_name = random.choice(os.listdir('Helper#1/images'))
+    with open(f'Helper#1/images/{img_name}', 'rb') as f:  
+            bot.send_photo(message.chat.id, f)  
+
+def get_dog_image_url():    
+        url = 'https://random.dog/woof.json'
+        res = requests.get(url)
+        data = res.json()
+        return data['url']
+    
+    
+@bot.message_handler(commands=['dog'])
+def dog(message):
+    '''По команде fox вызывает функцию get_dog_image_url и отправляет URL изображения утки'''
+    image_url = get_dog_image_url()
+    bot.reply_to(message, image_url)
+
+
+@bot.message_handler(commands=['random'])
+def send_random(message):
+    parts = message.text.split()
+    
+    min_val = int(parts[1])
+    max_val = int(parts[2])
+    random_num = get_random_number(min_val, max_val)
+
+    response = "Случайное число: " + random_num
+    
+    bot.send_message(message.chat.id, response)
+
 @bot.message_handler(func=lambda message: True)
 def echo_all(message):
     bot.reply_to(message, message.text)
 
-bot.polling()
+bot.infinity_polling()
