@@ -4,7 +4,7 @@ import random
 import os
 import requests
 from config import TOKEN
-from logic import gen_pass, gen_emodji, flip_coin,get_random_fact,count_down,get_help_text,get_random_number
+from logic import gen_pass, gen_emodji, flip_coin,get_random_fact,count_down,get_help_text,get_random_number,get_ecology_organizations
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -83,7 +83,7 @@ def get_dog_image_url():
     
 @bot.message_handler(commands=['dog'])
 def dog(message):
-    '''По команде fox вызывает функцию get_dog_image_url и отправляет URL изображения утки'''
+    '''По команде dog вызывает функцию get_dog_image_url и отправляет URL изображения утки'''
     image_url = get_dog_image_url()
     bot.reply_to(message, image_url)
 
@@ -91,17 +91,92 @@ def dog(message):
 @bot.message_handler(commands=['random'])
 def send_random(message):
     parts = message.text.split()
-    
     min_val = int(parts[1])
     max_val = int(parts[2])
     random_num = get_random_number(min_val, max_val)
-
     response = "Случайное число: " + random_num
-    
     bot.send_message(message.chat.id, response)
+
+@bot.message_handler(commands=['ecology'])
+def send_random(message):
+    ecology_text = get_ecology_organizations()
+    bot.send_message(message.chat.id, ecology_text)
+
+quiz_data = {}
+
+quiz_data = {}
+
+@bot.message_handler(commands=['quiz'])
+def start_quiz(message):
+    chat_id = message.chat.id
+    quiz_data[chat_id] = {'step': 1, 'score': 0}
+    bot.send_message(chat_id, "Вопрос 1:\nСколько времени разлагается пластиковая бутылка?")
+
+
+@bot.message_handler(content_types=['text'])
+def handle_answer(message):
+    chat_id = message.chat.id
+    
+    if chat_id not in quiz_data:
+        return 
+    
+    state = quiz_data[chat_id]
+    user_answer = message.text.strip().lower()
+    
+    if state['step'] == 1:
+        if user_answer in ["450 лет", "450", "около 450 лет"]:
+            state['score'] += 1
+            bot.send_message(chat_id, "✅ Правильно!")
+        else:
+            bot.send_message(chat_id, "❌ Неправильно. Верный ответ: 450 лет")
+        state['step'] = 2
+        bot.send_message(chat_id, "Вопрос 2:\nКак долго разлагается алюминиевая банка?")
+
+    elif state['step'] == 2:
+        if user_answer in ["80 лет", "80", "около 80 лет"]:
+            state['score'] += 1
+            bot.send_message(chat_id, "✅ Правильно!")
+        else:
+            bot.send_message(chat_id, "❌ Неправильно. Верный ответ: 80 лет")
+        state['step'] = 3
+        bot.send_message(chat_id, "Вопрос 3:\nСколько времени нужно, чтобы разложилась стеклянная бутылка?")
+
+    elif state['step'] == 3:
+        if user_answer in ["более 4000 лет", "4000+ лет", "больше 4000"]:
+            state['score'] += 1
+            bot.send_message(chat_id, "✅ Правильно!")
+        else:
+            bot.send_message(chat_id, "❌ Неправильно. Верный ответ: более 4000 лет")
+        state['step'] = 4
+        bot.send_message(chat_id, "Вопрос 4:\nКак быстро разлагается банановая кожура?")
+
+
+    elif state['step'] == 4:
+        if user_answer in ["1–2 недели", "1-2 недели", "1 2 недели", "за 1-2 недели"]:
+            state['score'] += 1
+            bot.send_message(chat_id, "✅ Правильно!")
+        else:
+            bot.send_message(chat_id, "❌ Неправильно. Верный ответ: 1–2 недели")
+        state['step'] = 5
+        bot.send_message(chat_id, "Вопрос 5:\nСколько лет разлагается полиэтиленовый пакет?")
+
+    elif state['step'] == 5:
+        if user_answer in ["100 лет", "100", "около 100 лет"]:
+            state['score'] += 1
+            bot.send_message(chat_id, "✅ Правильно!")
+        else:
+            bot.send_message(chat_id, "❌ Неправильно. Верный ответ: 100 лет")
+        
+        total = 5
+        score = state['score']
+        result = "Квиз завершён! Ваш результат: " + str(score) + "/" + str(total)
+        bot.send_message(chat_id, result)
+        
+        del quiz_data[chat_id]
 
 @bot.message_handler(func=lambda message: True)
 def echo_all(message):
     bot.reply_to(message, message.text)
 
 bot.infinity_polling()
+
